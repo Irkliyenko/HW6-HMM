@@ -1,18 +1,5 @@
 # HW6-HMM
 
-In this assignment, you'll implement the Forward and Viterbi Algorithms (dynamic programming). 
-
-
-# Assignment
-
-## Overview 
-
-The goal of this assignment is to implement the Forward and Viterbi Algorithms for Hidden Markov Models (HMMs).
-
-For a helpful refresher on HMMs and the Forward and Viterbi Algorithms you can check out the resources [here](https://web.stanford.edu/~jurafsky/slp3/A.pdf), 
-[here](https://towardsdatascience.com/markov-and-hidden-markov-model-3eec42298d75), and [here](https://pieriantraining.com/viterbi-algorithm-implementation-in-python-a-practical-guide/). 
-
-
 
 
 
