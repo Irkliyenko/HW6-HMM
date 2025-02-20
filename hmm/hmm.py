@@ -30,8 +30,6 @@ class HiddenMarkovModel:
 
     def forward(self, input_observation_states: np.ndarray) -> float:
         """
-        TODO 
-
         This function runs the forward algorithm on an input sequence of observation states
 
         Args:
@@ -40,21 +38,39 @@ class HiddenMarkovModel:
         Returns:
             forward_probability (float): forward probability (likelihood) for the input observed sequence  
         """        
-        
-        # Step 1. Initialize variables
-        
-       
-        # Step 2. Calculate probabilities
+        if len(input_observation_states) == 0:
+            return 0
 
+        if self.transition_p.shape != (len(self.hidden_states), len(self.hidden_states)):
+            raise ValueError("Transition probability matrix has incorrect dimensions.")
+
+        if self.emission_p.shape != (len(self.hidden_states), len(self.observation_states)):
+            raise ValueError("Emission probability matrix has incorrect dimensions.")
+
+        # Step 1. Initialize variables
+        fw_mat = np.zeros((len(self.hidden_states), len(input_observation_states)))
+        
+        obs_index = self.observation_states_dict.get(input_observation_states[0], None)   
+        if obs_index is None:
+            raise ValueError(f"Observation state '{input_observation_states[0]}' not found in observation_states_dict.")
+
+        fw_mat[:, 0] = self.prior_p * self.emission_p[:, obs_index]
+        
+        # Step 2. Calculate probabilities
+        for t in range(1, len(input_observation_states)):
+            obs_index = self.observation_states_dict.get(input_observation_states[t], None)
+            if obs_index is None:
+                raise ValueError(f"Observation state '{input_observation_states[t]}' not found in observation_states_dict.") 
+            for s in range(len(self.hidden_states)):
+                fw_mat[s, t] = np.sum(fw_mat[:, t-1] * self.transition_p[:, s]) * self.emission_p[s, obs_index]
 
         # Step 3. Return final probability 
+        return np.sum(fw_mat[:, -1])
         
 
 
     def viterbi(self, decode_observation_states: np.ndarray) -> list:
         """
-        TODO
-
         This function runs the viterbi algorithm on an input sequence of observation states
 
         Args:
@@ -62,21 +78,47 @@ class HiddenMarkovModel:
 
         Returns:
             best_hidden_state_sequence(list): most likely list of hidden states that generated the sequence observed states
-        """        
+        """ 
+
+        if len(decode_observation_states) == 0:
+            return 0
+
+        if self.transition_p.shape != (len(self.hidden_states), len(self.hidden_states)):
+            raise ValueError("Transition probability matrix has incorrect dimensions.")
+
+        if self.emission_p.shape != (len(self.hidden_states), len(self.observation_states)):
+            raise ValueError("Emission probability matrix has incorrect dimensions.")       
         
         # Step 1. Initialize variables
         
-        #store probabilities of hidden state at each step 
-        viterbi_table = np.zeros((len(decode_observation_states), len(self.hidden_states)))
-        #store best path for traceback
-        best_path = np.zeros(len(decode_observation_states))         
-        
-       
-       # Step 2. Calculate Probabilities
+        viterbi_table = np.zeros((len(self.hidden_states), len(decode_observation_states)))
+        backpointer = np.zeros((len(self.hidden_states), len(decode_observation_states)), dtype=int)
 
+        obs_index = self.observation_states_dict.get(decode_observation_states[0], None)      
+        if obs_index is None:
+            raise ValueError(f"Observation state '{decode_observation_states[0]}' not found in observation_states_dict.")
+
+        # Step 2. Calculate probabilities
+
+        viterbi_table[:, 0] = self.prior_p * self.emission_p[:, obs_index]
+        backpointer[:, 0] = 0
+
+        for t in range(1, len(decode_observation_states)):
+            obs_index = self.observation_states_dict.get(decode_observation_states[t], None)
+            if obs_index is None:
+                raise ValueError(f"Observation state '{decode_observation_states[t]}' not found in observation_states_dict.") 
+            for s in range(len(self.hidden_states)):
+                viterbi_table[s, t] = np.max(viterbi_table[:, t-1] * self.transition_p[:, s]) * self.emission_p[s, obs_index]  
+                backpointer[s, t] = np.argmax(viterbi_table[:, t-1] * self.transition_p[:, s])    
             
         # Step 3. Traceback 
+        best_path_pointer = np.argmax(viterbi_table[:, -1])
+        best_path = [best_path_pointer]
 
+        for t in range(len(decode_observation_states)-1, 0, -1):
+            best_path.append(backpointer[best_path[-1], t])
+        
+        best_path.reverse()
 
         # Step 4. Return best hidden state sequence 
-        
+        return [str(self.hidden_states[state]) for state in best_path]
