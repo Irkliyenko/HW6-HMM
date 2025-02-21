@@ -1,72 +1,129 @@
-# HW6-HMM
+# HW 6: Hidden Markov Model
 
+---
 
+## Description
 
+The `hmm/hmm.py` script contains the `HiddenMarkovModel` class, which implements a **Hidden Markov Model (HMM)** with **Forward** and **Viterbi** algorithms. This class allows initialization using predefined states and probabilities and provides methods for computing the likelihood of an observation sequence and decoding the most probable sequence of hidden states.
 
-## Tasks and Data 
-Please complete the `forward` and `viterbi` functions in the HiddenMarkovModel class. 
+## Class Methods and Attributes
 
-We have provided two HMM models (mini_weather_hmm.npz and full_weather_hmm.npz) which explore the relationships between observable weather phenomenon and the temperature outside. Start with the mini_weather_hmm model for testing and debugging. Both include the following arrays:
-* `hidden_states`: list of possible hidden states 
-* `observation_states`: list of possible observation states 
-* `prior_p`: prior probabilities of hidden states (in order given in `hidden_states`) 
-* `transition_p`: transition probabilities of hidden states (in order given in `hidden_states`)
-* `emission_p`: emission probabilities (`hidden_states` --> `observation_states`)
+### 1. **Initialization (`__init__`)**
+**Description:**  
+Initializes the Hidden Markov Model (HMM) with observation states, hidden states, and probability matrices.
 
+**Attributes:**
+- `self.observation_states` → List of possible observed states.
+- `self.hidden_states` → List of possible hidden states.
+- `self.prior_p` → Prior probabilities of the hidden states.
+- `self.transition_p` → Transition probability matrix between hidden states.
+- `self.emission_p` → Emission probability matrix for hidden-to-observed state mapping.
+- `self.observation_states_dict` → Dictionary mapping observed states to their indices.
+- `self.hidden_states_dict` → Dictionary mapping hidden states to their indices.
 
+**Parameters:**
+- `observation_states` *(np.ndarray)*: List of observed states.
+- `hidden_states` *(np.ndarray)*: List of hidden states.
+- `prior_p` *(np.ndarray)*: Initial probability distribution of hidden states.
+- `transition_p` *(np.ndarray)*: Probability matrix for transitions between hidden states.
+- `emission_p` *(np.ndarray)*: Probability matrix for emitting an observed state given a hidden state.
 
-For both datasets, we also provide input observation sequences and the solution for their best hidden state sequences. 
- * `observation_state_sequence`: observation sequence to test 
-* `best_hidden_state_sequence`: correct viterbi hidden state sequence 
+---
 
+### 2. **Computing Observation Sequence Likelihood (`forward`)**
+**Description:**  
+Runs the **Forward Algorithm** to compute the probability of observing a given sequence.
 
-Create an HMM class instance for both models and test that your Forward and Viterbi implementation returns the correct probabilities and hidden state sequence for each of the observation sequences.
+**Algorithm Overview:**
+1. **Initialize**: Compute initial probabilities based on prior and emission probabilities.
+2. **Recursion**: Compute the probability of each state at each time step using previous states.
+3. **Termination**: Sum over the probabilities in the last time step.
 
-Within your code, consider the scope of the inputs and how the different parameters of the input data could break the bounds of your implementation.
-  * Do your model probabilites add up to the correct values? Is scaling required?
-  * How will your model handle zero-probability transitions? 
-  * Are the inputs in compatible shapes/sizes which each other? 
-  * Any other edge cases you can think of?
-  * Ensure that your code accomodates at least 2 possible edge cases. 
+**Parameters:**
+- `input_observation_states` *(np.ndarray)* → The sequence of observed states.
 
-Finally, please update your README with a brief description of your methods. 
+**Returns:**
+- *(float)* → The computed probability of observing the given sequence.
 
+**Error Handling:**
+- Raises `ValueError` if the transition or emission matrices have incorrect dimensions.
+- Raises `ValueError` if an observed state is not found in `self.observation_states_dict`.
 
+---
 
-## Task List
+### 3. **Decoding Most Likely State Sequence (`viterbi`)**
+**Description:**  
+Runs the **Viterbi Algorithm** to find the most likely sequence of hidden states for a given observation sequence.
 
-[TODO] Complete the HiddenMarkovModel Class methods  <br>
-  [ ] complete the `forward` function in the HiddenMarkovModelClass <br>
-  [ ] complete the `viterbi` function in the HiddenMarkovModelClass <br>
+**Algorithm Overview:**
+1. **Initialize**: Compute initial probabilities for each hidden state.
+2. **Recursion**: Compute the most probable path to each hidden state at each time step.
+3. **Backtrace**: Trace back the best path using stored backpointers.
 
-[TODO] Unit Testing  <br>
-  [ ] Ensure functionality on mini and full weather dataset <br>
-  [ ] Account for edge cases 
+**Parameters:**
+- `decode_observation_states` *(np.ndarray)* → The sequence of observed states to decode.
 
-[TODO] Packaging <br>
-  [ ] Update README with description of your methods <br>
-  [ ] pip installable module (optional)<br>
-  [ ] github actions (install + pytest) (optional)
+**Returns:**
+- *(list[str])* → The most likely sequence of hidden states.
 
+**Error Handling:**
+- Raises `ValueError` if the transition or emission matrices have incorrect dimensions.
+- Raises `ValueError` if an observed state is not found in `self.observation_states_dict`.
 
-## Completing the Assignment 
-Push your code to GitHub with passing unit tests, and submit a link to your repository [here](https://forms.gle/xw98ZVQjaJvZaAzSA)
+---
 
-### Grading 
+## **Test Functions**
 
-* Algorithm implementation (6 points)
-    * Forward algorithm is correct (2)
-    * Viterbi is correct (2)
-    * Output is correct on small weather dataset (1)
-    * Output is correct on full weather dataset (1)
+### **1. `test_mini_weather()`**
+**Description:**  
+Tests the `HiddenMarkovModel` implementation using a **miniature weather dataset**.
 
-* Unit Tests (3 points)
-    * Mini model unit test (1)
-    * Full model unit test (1)
-    * Edge cases (1)
+**Process:**
+1. Loads a **mini weather HMM** from `mini_weather_hmm.npz`.
+2. Runs the **Forward Algorithm** on `mini_weather_sequences.npz` and validates:
+   - Output type is a `float`.
+3. Runs the **Viterbi Algorithm** and validates:
+   - Output type is a `list`.
+   - Length matches expected sequence length.
+   - Predicted sequence matches expected sequence.
 
-* Style (1 point)
-    * Readable code and updated README with a description of your methods 
+**Expected Outcome:**  
+- The **Forward Algorithm** returns a `float` probability.
+- The **Viterbi Algorithm** returns the correct sequence of hidden states.
 
-* Extra credit (0.5 points)
-    * Pip installable and Github actions (0.5)
+---
+
+### **2. `test_full_weather()`**
+**Description:**  
+Tests the `HiddenMarkovModel` implementation on a **full weather dataset**.
+
+**Process:**
+1. Loads a **full weather HMM** from `full_weather_hmm.npz`.
+2. Runs the **Forward Algorithm** on `full_weather_sequences.npz` and validates:
+   - Output type is a `float`.
+3. Runs the **Viterbi Algorithm** and validates:
+   - Output type is a `list`.
+   - Length matches expected sequence length.
+   - Predicted sequence matches expected sequence.
+
+**Expected Outcome:**  
+- The **Forward Algorithm** returns a `float` probability.
+- The **Viterbi Algorithm** returns the correct sequence of hidden states.
+
+---
+
+### **3. Edge Cases**
+The test suite ensures the robustness of the implementation by checking:
+1. **Empty input sequence**:
+   - The **Forward Algorithm** should return `0`.
+   - The **Viterbi Algorithm** should return `0` or an empty sequence.
+2. **Incorrect transition/emission matrix dimensions**:
+   - The class should raise a `ValueError` if the transition matrix is not square.
+   - The class should raise a `ValueError` if the emission matrix does not match state-observation dimensions.
+
+---
+
+## **Usage**
+To run the tests, use:
+```bash
+pytest test_hmm.py
