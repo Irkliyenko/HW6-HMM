@@ -121,9 +121,4 @@ The test suite ensures the robustness of the implementation by checking:
    - The class should raise a `ValueError` if the transition matrix is not square.
    - The class should raise a `ValueError` if the emission matrix does not match state-observation dimensions.
 
----
 
-## **Usage**
-To run the tests, use:
-```bash
-pytest test_hmm.py
